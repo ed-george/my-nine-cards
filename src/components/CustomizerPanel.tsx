@@ -58,7 +58,7 @@ export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
               className="panel-text-input"
               value={settings.subtitle}
               maxLength={40}
-              placeholder="e.g. @yourname or Charizard Collector"
+              placeholder="e.g. @yourhandle"
               onChange={(e) => onChangeSettings({ subtitle: e.target.value })}
             />
           </div>

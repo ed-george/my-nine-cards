@@ -10,12 +10,12 @@ import { saveToLocalStorage, loadFromLocalStorage } from './services/urlState';
 import './index.css';
 
 const DEFAULT_SETTINGS: CustomizationSettings = {
-  title: 'My 9 Favourite Pokémon Cards',
-  subtitle: '@ptcgenius',
+  title: 'My 9 Cards',
+  subtitle: 'The cards that made me',
   themeId: 'base-set-holo',
   showCardNames: false,
-  cardGap: 16,
-  borderRadius: 12,
+  cardGap: 8,
+  borderRadius: 8,
 };
 
 export const App: React.FC = () => {

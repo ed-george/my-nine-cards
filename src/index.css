@@ -1168,6 +1168,10 @@ body {
   color: #2563eb;
 }
 
+.tcgdex-icon {
+  color: #059669;
+}
+
 .link-text-stack {
   display: flex;
   flex-direction: column;

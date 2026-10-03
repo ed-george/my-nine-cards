@@ -192,7 +192,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               ) : totalCount > 0 ? (
                 <>Found <strong>{totalCount}</strong> Pokémon cards matching "{query}"</>
               ) : (
-                'Search over 20,000+ TCG cards from Base Set to Scarlet & Violet'
+                'Search over 20,000+ TCG cards from Base Set to present day'
               )}
             </p>
           </div>

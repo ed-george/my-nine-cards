@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Globe, ExternalLink, Heart } from 'lucide-react';
+import { X, Globe, ExternalLink, Heart, Database } from 'lucide-react';
 
 interface AboutModalProps {
   isOpen: boolean;
@@ -27,19 +27,19 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
         <div className="about-modal-body">
           <div className="creator-info-card">
             <p className="creator-text">
-              Created with <Heart size={15} className="heart-icon" /> by <strong>Ed Holloway-George</strong>.
+              Created with <Heart size={15} className="heart-icon" /> by <a href="https://spght.dev" target="_blank" rel="noopener noreferrer"><strong>Ed Holloway-George</strong></a>
             </p>
             <p className="creator-desc">
-              Build and customize 3x3 grids of your favourite Pokémon cards using the TCGdex REST API, then export high-resolution images to share with the community.
+              Chief-Vibe Coder
             </p>
           </div>
 
           <div className="about-links-group">
-            <span className="links-group-label">Connect & Links</span>
+            <span className="links-group-label">Connect & Data</span>
 
             {/* X / Twitter Link */}
             <a
-              href="https://x.com/ptgenius"
+              href="https://x.com/ptcgenius"
               target="_blank"
               rel="noopener noreferrer"
               className="about-link-item"
@@ -48,7 +48,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                 <span className="x-logo-icon">𝕏</span>
                 <div className="link-text-stack">
                   <span className="link-title">Follow on X</span>
-                  <span className="link-handle">@ptgenius</span>
+                  <span className="link-handle">@ptcgenius</span>
                 </div>
               </div>
               <ExternalLink size={16} className="external-icon" />
@@ -66,6 +66,23 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                 <div className="link-text-stack">
                   <span className="link-title">Personal Website</span>
                   <span className="link-handle">spght.dev</span>
+                </div>
+              </div>
+              <ExternalLink size={16} className="external-icon" />
+            </a>
+
+            {/* TCGdex Link */}
+            <a
+              href="https://tcgdex.dev/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="about-link-item"
+            >
+              <div className="link-left">
+                <Database size={18} className="tcgdex-icon" />
+                <div className="link-text-stack">
+                  <span className="link-title">Powered by TCGdex</span>
+                  <span className="link-handle">tcgdex.dev</span>
                 </div>
               </div>
               <ExternalLink size={16} className="external-icon" />

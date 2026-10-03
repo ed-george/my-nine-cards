@@ -2,7 +2,7 @@
 
 A web application inspired by `my9albums.com` built specifically for **Pokémon TCG collectors and fans**. Search over 20,000+ official Pokémon cards using the **TCGdex REST API**, build your ultimate 3x3 card showcase, customize aesthetic themes, and export high-resolution images to share on social media.
 
-Created by **Ed Holloway-George** ([@ptgenius](https://x.com/ptgenius) • [spght.dev](https://spght.dev)).
+Created by **Ed Holloway-George** ([@ptcgenius](https://x.com/ptcgenius) • [spght.dev](https://spght.dev)).
 
 ---
 

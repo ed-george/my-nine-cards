@@ -512,6 +512,13 @@ body {
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+}
+
+.showcase-footer span {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .watermark-brand {

@@ -111,6 +111,8 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             className="action-btn primary-btn"
             onClick={onOpenExport}
+            disabled={filledCardCount < 9}
+            title={filledCardCount < 9 ? 'Fill all 9 slots to export image' : 'Export showcase image'}
           >
             <Download size={16} />
             <span className="btn-text">Export Image</span>

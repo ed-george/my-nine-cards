@@ -212,6 +212,14 @@ body {
   padding: 8px;
 }
 
+.action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: auto;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 /* Main Layout Viewport */
 .main-content-viewport {
   flex: 1;

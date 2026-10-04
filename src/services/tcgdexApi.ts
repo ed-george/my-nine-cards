@@ -95,12 +95,6 @@ export async function searchCards(filters: SearchFilters): Promise<SearchResults
         );
       }
 
-      if (filters.type) {
-        allMatchingCards = allMatchingCards.filter((card) =>
-          card.types?.some((t) => t.toLowerCase() === filters.type?.toLowerCase())
-        );
-      }
-
       apiCache.set(queryKey, allMatchingCards);
     } catch (error) {
       console.error('Failed to search TCGdex cards:', error);

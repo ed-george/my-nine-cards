@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, X, Loader2, Sparkles, Filter, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Search, X, Loader2, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 import type { PokemonCard, SearchFilters } from '../types/pokemon';
 import { searchCards, getCardImageUrl, sanitizeSearchQuery } from '../services/tcgdexApi';
 
@@ -11,32 +11,15 @@ interface SearchModalProps {
 }
 
 const QUICK_SEARCHES = [
-  'Pikachu',
-  'Charizard',
-  'Mewtwo',
-  'Gengar',
+  'Garbodor',
+  'Gardevoir',
   'Rayquaza',
-  'Umbreon',
   'Lugia',
   'Lucario',
-  'Eevee',
-  'Giratina',
-  'Sylveon',
+  'Mew',
+  'Mewtwo',
   'Snorlax',
-];
-
-const CARD_TYPES = [
-  'All',
-  'Fire',
-  'Water',
-  'Grass',
-  'Lightning',
-  'Psychic',
-  'Fighting',
-  'Darkness',
-  'Metal',
-  'Dragon',
-  'Colorless',
+  'Zoroark'
 ];
 
 const ITEMS_PER_PAGE = 24;
@@ -47,8 +30,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   onClose,
   onSelectCard,
 }) => {
-  const [query, setQuery] = useState('Pikachu');
-  const [selectedType, setSelectedType] = useState('All');
+  const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const [results, setResults] = useState<PokemonCard[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -65,7 +47,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 100);
-      executeSearch(query, selectedType, 1, false);
+      executeSearch(query, 1, false);
     }
   }, [isOpen]);
 
@@ -74,16 +56,15 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     if (!isOpen) return;
     const timer = setTimeout(() => {
       setPage(1);
-      executeSearch(query, selectedType, 1, false);
+      executeSearch(query, 1, false);
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [query, selectedType, isOpen]);
+  }, [query, isOpen]);
 
   // Execute search function with 100% exact math & chunking
   const executeSearch = async (
     searchTerm: string,
-    typeFilter: string,
     targetPage: number,
     isAppend: boolean
   ) => {
@@ -109,7 +90,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
     const filters: SearchFilters = {
       query: cleanSearchTerm,
-      type: typeFilter === 'All' ? undefined : typeFilter,
       page: targetPage,
       itemsPerPage: ITEMS_PER_PAGE,
     };
@@ -142,8 +122,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   const loadNextPage = useCallback(() => {
     if (loading || loadingMore || !hasMore) return;
     const nextPage = page + 1;
-    executeSearch(query, selectedType, nextPage, true);
-  }, [loading, loadingMore, hasMore, page, query, selectedType]);
+    executeSearch(query, nextPage, true);
+  }, [loading, loadingMore, hasMore, page, query]);
 
   // IntersectionObserver sentinel with 250px early trigger
   useEffect(() => {
@@ -209,7 +189,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             ref={inputRef}
             type="text"
             className="search-input"
-            placeholder="Search card name (e.g. Charizard, Pikachu, Rayquaza)..."
+            placeholder="Search card name (e.g. Budew, Iono, Rayquaza)..."
             value={query}
             onChange={(e) => setQuery(sanitizeSearchQuery(e.target.value))}
           />
@@ -231,22 +211,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 onClick={() => setQuery(term)}
               >
                 {term}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Type Filter Tabs */}
-        <div className="type-filter-bar">
-          <Filter size={15} className="filter-label-icon" />
-          <div className="type-tabs-scroll">
-            {CARD_TYPES.map((type) => (
-              <button
-                key={type}
-                className={`type-tab ${selectedType === type ? 'active' : ''}`}
-                onClick={() => setSelectedType(type)}
-              >
-                {type}
               </button>
             ))}
           </div>

@@ -88,6 +88,15 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
               <ExternalLink size={16} className="external-icon" />
             </a>
           </div>
+
+          <span className="links-group-label">Copyright Notice</span>
+
+          {/* Pokémon TCG Copyright Disclaimer */}
+          <div className="about-disclaimer-box">
+            <p className="disclaimer-text">
+              The content on this website surrounding the Pokémon Trading Card Game and Pokémon Trading Card Game Pocket, including but not limited to card images and text, is copyright The Pokémon Company (Pokémon), Nintendo, DeNA, Game Freak and/or Creatures Inc. This website is fan made and not produced by, endorsed by, supported by, or affiliated with Pokémon, Nintendo, Game Freak, Creatures or any afformentioned entities.
+            </p>
+          </div>
         </div>
       </div>
     </div>

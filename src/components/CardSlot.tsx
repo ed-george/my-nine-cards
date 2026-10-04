@@ -46,7 +46,6 @@ export const CardSlot: React.FC<CardSlotProps> = ({
             alt={card.name}
             className="card-image"
             loading="lazy"
-            crossOrigin="anonymous"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               const fallbackUrl = getCardImageUrl(card, 'high', 'jpg');

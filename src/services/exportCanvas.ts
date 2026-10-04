@@ -1,24 +1,106 @@
 import { toPng, toJpeg, toBlob } from 'html-to-image';
 
 /**
- * Converts an image URL to a base64 data URL to prevent CORS canvas export failures across browsers
+ * Converts a Blob to a Base64 data URL
+ */
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+/**
+ * Loads an image into an HTMLImageElement and converts it to Base64 via Canvas
+ */
+function loadImageElementAsBase64(url: string, useCrossOrigin = true): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    if (useCrossOrigin) {
+      img.crossOrigin = 'anonymous';
+    }
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width || 300;
+        canvas.height = img.naturalHeight || img.height || 420;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('No 2d canvas context available'));
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } catch (err) {
+        reject(err);
+      }
+    };
+    img.onerror = (e) => reject(e);
+    img.src = url;
+  });
+}
+
+/**
+ * Converts an image URL to a base64 data URL to prevent CORS canvas export failures across browsers.
+ * Uses 4-tier fallback:
+ * 1. Direct CORS fetch with cache-busting parameter to prevent non-CORS disk cache hits
+ * 2. HTMLImageElement + Canvas data URL conversion
+ * 3. Fallback format (.jpg instead of .webp)
+ * 4. High-reliability CORS proxy fallback
  */
 async function getBase64ImageFromUrl(url: string): Promise<string> {
   if (!url || url.startsWith('data:')) return url;
 
+  // Tier 1: Direct CORS fetch with cache-busting to bypass stale non-CORS disk cache
   try {
-    const response = await fetch(url, { mode: 'cors' });
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch (err) {
-    console.warn('Failed to convert image to base64 via fetch:', url, err);
-    return url;
+    const fetchUrl = url.includes('?') ? `${url}&cors_bypass=1` : `${url}?cors_bypass=1`;
+    const response = await fetch(fetchUrl, { mode: 'cors', cache: 'reload' });
+    if (response.ok) {
+      const blob = await response.blob();
+      const base64 = await blobToBase64(blob);
+      if (base64.startsWith('data:image')) return base64;
+    }
+  } catch {
+    // Continue to next tier
   }
+
+  // Tier 2: HTMLImageElement Canvas Conversion
+  try {
+    const base64 = await loadImageElementAsBase64(url, true);
+    if (base64 && base64.startsWith('data:image')) return base64;
+  } catch {
+    // Continue to next tier
+  }
+
+  // Tier 3: Format Fallback (.webp -> .jpg)
+  if (url.endsWith('.webp')) {
+    try {
+      const jpgUrl = url.replace(/\.webp$/, '.jpg');
+      const fetchUrl = jpgUrl.includes('?') ? `${jpgUrl}&cors_bypass=1` : `${jpgUrl}?cors_bypass=1`;
+      const response = await fetch(fetchUrl, { mode: 'cors', cache: 'reload' });
+      if (response.ok) {
+        const blob = await response.blob();
+        const base64 = await blobToBase64(blob);
+        if (base64.startsWith('data:image')) return base64;
+      }
+    } catch {
+      // Continue to next tier
+    }
+  }
+
+  // Tier 4: Public CORS Proxy Fallback for strict CDN policies
+  try {
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
+    if (response.ok) {
+      const blob = await response.blob();
+      const base64 = await blobToBase64(blob);
+      if (base64.startsWith('data:image')) return base64;
+    }
+  } catch (err) {
+    console.warn('All CORS base64 conversion tiers failed for image:', url, err);
+  }
+
+  return url;
 }
 
 /**

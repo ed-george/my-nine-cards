@@ -296,7 +296,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                           src={imgUrl}
                           alt={card.name}
                           loading="lazy"
-                          crossOrigin="anonymous"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             const fallback = getCardImageUrl(card, 'high', 'jpg');

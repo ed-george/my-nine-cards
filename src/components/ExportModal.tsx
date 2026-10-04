@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Download, Copy, X, Check, Loader2, Image as ImageIcon } from 'lucide-react';
 import { downloadGridImage, copyGridImageToClipboard } from '../services/exportCanvas';
+import { trackExportImage } from '../services/analytics';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -26,6 +27,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     setDownloadingFormat(format);
     setErrorMessage(null);
 
+    // Track analytics event
+    trackExportImage(format);
+
     const safeTitle = (title || 'my-9-cards')
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
@@ -45,6 +49,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const handleCopyClipboard = async () => {
     if (!exportRef.current) return;
     setErrorMessage(null);
+    trackExportImage('clipboard');
     const success = await copyGridImageToClipboard(exportRef.current);
     if (success) {
       setCopiedImage(true);

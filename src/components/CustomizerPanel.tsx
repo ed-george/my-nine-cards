@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Palette, LayoutGrid, Type, Check, Eye } from 'lucide-react';
 import type { CustomizationSettings, ThemeId } from '../types/pokemon';
 import { THEMES } from '../data/themes';
+import { trackThemeChanged } from '../services/analytics';
 
 interface CustomizerPanelProps {
   isOpen: boolean;
@@ -78,7 +79,10 @@ export const CustomizerPanel: React.FC<CustomizerPanelProps> = ({
                 <button
                   key={theme.id}
                   className={`theme-card-option ${isActive ? 'active' : ''}`}
-                  onClick={() => onChangeSettings({ themeId: theme.id as ThemeId })}
+                  onClick={() => {
+                    trackThemeChanged(theme.id);
+                    onChangeSettings({ themeId: theme.id as ThemeId });
+                  }}
                 >
                   <div
                     className="theme-color-preview"

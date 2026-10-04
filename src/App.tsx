@@ -7,6 +7,7 @@ import { CustomizerPanel } from './components/CustomizerPanel';
 import { ExportModal } from './components/ExportModal';
 import { AboutModal } from './components/AboutModal';
 import { saveToLocalStorage, loadFromLocalStorage } from './services/urlState';
+import { trackCardSelected } from './services/analytics';
 import './index.css';
 
 const DEFAULT_SETTINGS: CustomizationSettings = {
@@ -72,6 +73,9 @@ export const App: React.FC = () => {
       : slots.findIndex((s) => s.card === null);
 
     const actualIdx = targetIdx >= 0 ? targetIdx : 0;
+
+    // Track card selection event in Google Analytics
+    trackCardSelected(card, actualIdx);
 
     setSlots((prev) =>
       prev.map((s) => (s.index === actualIdx ? { ...s, card } : s))

@@ -2,7 +2,6 @@ import React from 'react';
 import type { GridSlot, CustomizationSettings } from '../types/card';
 import { CardSlot } from './CardSlot';
 import { getThemeById } from '../data/themes';
-import { tcgRegistry } from '../providers';
 
 interface CardGridProps {
   slots: GridSlot[];
@@ -44,20 +43,6 @@ export const CardGrid: React.FC<CardGridProps> = ({
     }
     setDraggedIndex(null);
   };
-
-  // Determine dynamic provider attributions for the current grid
-  const activeProviders = Array.from(
-    new Set(
-      slots
-        .map((s) => s.card?.tcgId || 'pokemon')
-        .filter(Boolean)
-    )
-  ).map((id) => tcgRegistry.get(id));
-
-  const providerAttributionText =
-    activeProviders.length > 0
-      ? activeProviders.map((p) => p.attribution.replace(/^Powered by /i, '')).join(' & ')
-      : 'TCGdex';
 
   return (
     <div className="showcase-outer-container">
@@ -112,7 +97,7 @@ export const CardGrid: React.FC<CardGridProps> = ({
           <span className="watermark-dot">•</span>
           <span className="watermark-handle">@ptcgenius</span>
           <span className="watermark-dot">•</span>
-          <span className="watermark-tcg">Powered by {providerAttributionText}</span>
+          <span className="watermark-tcg">Make your own at my9.cards</span>
         </div>
       </div>
     </div>

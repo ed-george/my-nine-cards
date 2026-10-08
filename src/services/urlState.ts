@@ -1,4 +1,5 @@
-import type { CustomizationSettings, GridSlot } from '../types/pokemon';
+import type { CustomizationSettings, GridSlot } from '../types/card';
+import { tcgRegistry } from '../providers';
 
 const STORAGE_KEY_SLOTS = 'my9cards_slots_v1';
 const STORAGE_KEY_SETTINGS = 'my9cards_settings_v1';
@@ -21,7 +22,7 @@ export function saveToLocalStorage(slots: GridSlot[], settings: CustomizationSet
 }
 
 /**
- * Loads slots and settings from localStorage
+ * Loads slots and settings from localStorage, normalizing saved cards for multi-TCG compatibility
  */
 export function loadFromLocalStorage(
   defaultSettings: CustomizationSettings
@@ -35,7 +36,7 @@ export function loadFromLocalStorage(
     const parsedSlots = JSON.parse(rawSlots);
     const slots: GridSlot[] = parsedSlots.map((item: any) => ({
       index: item.index,
-      card: item.cardData || null,
+      card: tcgRegistry.normalizeCard(item.cardData),
     }));
 
     const settings: CustomizationSettings = rawSettings

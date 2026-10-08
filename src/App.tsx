@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { GridSlot, CustomizationSettings, PokemonCard } from './types/pokemon';
+import type { GridSlot, CustomizationSettings, TCGCard } from './types/card';
 import { Header } from './components/Header';
 import { CardGrid } from './components/CardGrid';
 import { SearchModal } from './components/SearchModal';
@@ -67,7 +67,7 @@ export const App: React.FC = () => {
   };
 
   // Assign card to slot
-  const handleSelectCard = (card: PokemonCard, slotIndex?: number) => {
+  const handleSelectCard = (card: TCGCard, slotIndex?: number) => {
     const targetIdx = typeof slotIndex === 'number'
       ? slotIndex
       : slots.findIndex((s) => s.card === null);

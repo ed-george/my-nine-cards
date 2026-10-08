@@ -66,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <Info size={16} />
               </button>
             </div>
-            <p className="brand-tagline">Pokémon TCG Showcase Builder</p>
+            <p className="brand-tagline">Trading Card Showcase Builder</p>
           </div>
         </div>
 

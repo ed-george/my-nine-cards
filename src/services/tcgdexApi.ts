@@ -1,9 +1,24 @@
-import type { PokemonCard, CardSetSummary, SearchFilters, SearchResults } from '../types/pokemon';
+import type { CardSetSummary, SearchFilters } from '../types/card';
 
 const BASE_URL = 'https://api.tcgdex.net/v2/en';
 
 // Fallback card back image URL
 export const CARD_BACK_IMAGE = 'https://assets.tcgdex.net/en/swsh/swsh1/1/high.webp';
+
+export interface RawPokemonCard {
+  id: string;
+  localId: string;
+  name: string;
+  image?: string;
+  rarity?: string;
+  set?: CardSetSummary;
+  types?: string[];
+  category?: string;
+  illustrator?: string;
+  hp?: number;
+  dexId?: number[];
+  stage?: string;
+}
 
 /**
  * Sanitizes user search input to prevent query injection or parameter tampering
@@ -22,7 +37,7 @@ export function sanitizeSearchQuery(input: string): string {
  * Gets formatted image URL for a TCGdex card asset
  */
 export function getCardImageUrl(
-  cardOrImage?: PokemonCard | string | null,
+  cardOrImage?: RawPokemonCard | string | null,
   quality: 'high' | 'low' = 'high',
   extension: 'webp' | 'png' | 'jpg' = 'webp'
 ): string {
@@ -39,13 +54,21 @@ export function getCardImageUrl(
 }
 
 // In-memory cache for API responses
-const apiCache = new Map<string, PokemonCard[]>();
+const apiCache = new Map<string, RawPokemonCard[]>();
+
+export interface RawSearchResults {
+  rawCards: RawPokemonCard[];
+  page: number;
+  itemsPerPage: number;
+  hasMore: boolean;
+  totalCount: number;
+}
 
 /**
  * Fetches all matching cards for a query from TCGdex and returns sanitized, image-verified cards.
  * Returns exact total count and sliced pages for 100% mathematical precision.
  */
-export async function searchCards(filters: SearchFilters): Promise<SearchResults> {
+export async function searchCards(filters: SearchFilters): Promise<RawSearchResults> {
   const page = Math.max(1, filters.page || 1);
   const itemsPerPage = Math.max(12, Math.min(60, filters.itemsPerPage || 24));
   
@@ -59,7 +82,7 @@ export async function searchCards(filters: SearchFilters): Promise<SearchResults
     setId: filters.setId,
   });
 
-  let allMatchingCards: PokemonCard[] = [];
+  let allMatchingCards: RawPokemonCard[] = [];
 
   if (apiCache.has(queryKey)) {
     allMatchingCards = apiCache.get(queryKey)!;
@@ -79,7 +102,7 @@ export async function searchCards(filters: SearchFilters): Promise<SearchResults
         throw new Error(`API error: ${response.statusText}`);
       }
 
-      const rawCards: PokemonCard[] = await response.json();
+      const rawCards: RawPokemonCard[] = await response.json();
 
       // Filter out cards without valid image URLs
       allMatchingCards = rawCards.filter((card) => Boolean(card.image));
@@ -98,7 +121,7 @@ export async function searchCards(filters: SearchFilters): Promise<SearchResults
       apiCache.set(queryKey, allMatchingCards);
     } catch (error) {
       console.error('Failed to search TCGdex cards:', error);
-      return { cards: [], page: 1, itemsPerPage, hasMore: false, totalCount: 0 };
+      return { rawCards: [], page: 1, itemsPerPage, hasMore: false, totalCount: 0 };
     }
   }
 
@@ -110,7 +133,7 @@ export async function searchCards(filters: SearchFilters): Promise<SearchResults
   const hasMore = endIndex < totalCount;
 
   return {
-    cards: slicedCards,
+    rawCards: slicedCards,
     page,
     itemsPerPage,
     hasMore,
@@ -121,19 +144,19 @@ export async function searchCards(filters: SearchFilters): Promise<SearchResults
 /**
  * Fetches card detail by ID
  */
-export async function getCardById(cardId: string): Promise<PokemonCard | null> {
+export async function getCardById(cardId: string): Promise<RawPokemonCard | null> {
   const cleanId = sanitizeSearchQuery(cardId);
   if (!cleanId) return null;
 
   const cacheKey = `card_${cleanId}`;
   if (apiCache.has(cacheKey)) {
-    return (apiCache.get(cacheKey) as any);
+    return (apiCache.get(cacheKey) as any)[0] || null;
   }
 
   try {
     const response = await fetch(`${BASE_URL}/cards/${encodeURIComponent(cleanId)}`);
     if (!response.ok) return null;
-    const data: PokemonCard = await response.json();
+    const data: RawPokemonCard = await response.json();
     apiCache.set(cacheKey, [data]);
     return data;
   } catch (error) {

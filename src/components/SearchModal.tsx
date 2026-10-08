@@ -1,26 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, X, Loader2, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
-import type { PokemonCard, SearchFilters } from '../types/pokemon';
-import { searchCards, getCardImageUrl, sanitizeSearchQuery } from '../services/tcgdexApi';
+import { Search, X, Loader2, Sparkles, AlertCircle, CheckCircle2, Layers } from 'lucide-react';
+import type { TCGCard, SearchFilters, TCGProviderId } from '../types/card';
+import { tcgRegistry } from '../providers';
+import { sanitizeSearchQuery } from '../services/tcgdexApi';
 
 interface SearchModalProps {
   isOpen: boolean;
   targetSlotIndex: number | null;
   onClose: () => void;
-  onSelectCard: (card: PokemonCard, targetSlot?: number) => void;
+  onSelectCard: (card: TCGCard, targetSlot?: number) => void;
 }
-
-const QUICK_SEARCHES = [
-  'Garbodor',
-  'Gardevoir',
-  'Rayquaza',
-  'Lugia',
-  'Lucario',
-  'Mew',
-  'Mewtwo',
-  'Snorlax',
-  'Zoroark'
-];
 
 const ITEMS_PER_PAGE = 24;
 
@@ -30,9 +19,13 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   onClose,
   onSelectCard,
 }) => {
+  const providers = tcgRegistry.getAll();
+  const [selectedTcgId, setSelectedTcgId] = useState<TCGProviderId>('pokemon');
+  const activeProvider = tcgRegistry.get(selectedTcgId);
+
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [results, setResults] = useState<PokemonCard[]>([]);
+  const [results, setResults] = useState<TCGCard[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -47,24 +40,25 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 100);
-      executeSearch(query, 1, false);
+      executeSearch(query, selectedTcgId, 1, false);
     }
   }, [isOpen]);
 
-  // Debounced search trigger on query or filter change
+  // Debounced search trigger on query or TCG provider change
   useEffect(() => {
     if (!isOpen) return;
     const timer = setTimeout(() => {
       setPage(1);
-      executeSearch(query, 1, false);
+      executeSearch(query, selectedTcgId, 1, false);
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [query, isOpen]);
+  }, [query, selectedTcgId, isOpen]);
 
-  // Execute search function with 100% exact math & chunking
+  // Execute search using the active TCG provider
   const executeSearch = async (
     searchTerm: string,
+    tcgId: TCGProviderId,
     targetPage: number,
     isAppend: boolean
   ) => {
@@ -90,12 +84,13 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
     const filters: SearchFilters = {
       query: cleanSearchTerm,
+      tcgId,
       page: targetPage,
       itemsPerPage: ITEMS_PER_PAGE,
     };
 
     try {
-      const searchRes = await searchCards(filters);
+      const searchRes = await tcgRegistry.searchCards(filters);
 
       if (isAppend) {
         setResults((prev) => {
@@ -111,7 +106,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
       setHasMore(searchRes.hasMore);
       setPage(targetPage);
     } catch (err) {
-      setError('Failed to fetch Pokémon cards. Please try again.');
+      setError(`Failed to fetch cards from ${activeProvider.name}. Please try again.`);
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -122,10 +117,10 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   const loadNextPage = useCallback(() => {
     if (loading || loadingMore || !hasMore) return;
     const nextPage = page + 1;
-    executeSearch(query, nextPage, true);
-  }, [loading, loadingMore, hasMore, page, query]);
+    executeSearch(query, selectedTcgId, nextPage, true);
+  }, [loading, loadingMore, hasMore, page, query, selectedTcgId]);
 
-  // IntersectionObserver sentinel with 250px early trigger
+  // IntersectionObserver sentinel for auto infinite scroll
   useEffect(() => {
     if (!sentinelRef.current || !isOpen) return;
 
@@ -161,18 +156,18 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         <div className="modal-header">
           <div>
             <h3 className="modal-title">
-              Select Pokémon Card
+              Select Trading Card
               {targetSlotIndex !== null && (
                 <span className="target-slot-badge">For Slot #{targetSlotIndex + 1}</span>
               )}
             </h3>
             <p className="modal-subtitle">
               {loading ? (
-                'Searching TCGdex database...'
+                `Searching ${activeProvider.name} database...`
               ) : totalCount > 0 ? (
-                <>Found <strong>{totalCount}</strong> Pokémon cards matching "{query}"</>
+                <>Found <strong>{totalCount}</strong> {activeProvider.shortName} cards matching "{query}"</>
               ) : (
-                'Search over 20,000+ TCG cards from Base Set to present day'
+                `Search cards across supported Trading Card Games`
               )}
             </p>
           </div>
@@ -182,6 +177,28 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           </button>
         </div>
 
+        {/* TCG Provider Selector Tabs */}
+        <div className="tcg-provider-bar">
+          <Layers size={15} className="filter-label-icon" />
+          <div className="tcg-tabs-scroll">
+            {providers.map((p) => (
+              <button
+                key={p.id}
+                className={`tcg-tab ${selectedTcgId === p.id ? 'active' : ''}`}
+                style={{
+                  '--provider-color': p.brandColor,
+                } as React.CSSProperties}
+                onClick={() => {
+                  setSelectedTcgId(p.id);
+                  setQuery(p.popularSearches[0] || '');
+                }}
+              >
+                {p.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Search Input Controls */}
         <div className="search-input-wrapper">
           <Search className="search-icon" size={20} />
@@ -189,7 +206,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             ref={inputRef}
             type="text"
             className="search-input"
-            placeholder="Search card name (e.g. Budew, Iono, Rayquaza)..."
+            placeholder={`Search ${activeProvider.shortName} card name...`}
             value={query}
             onChange={(e) => setQuery(sanitizeSearchQuery(e.target.value))}
           />
@@ -204,7 +221,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         <div className="quick-search-section">
           <span className="section-label">Popular Searches:</span>
           <div className="quick-chips-list">
-            {QUICK_SEARCHES.map((term) => (
+            {activeProvider.popularSearches.map((term) => (
               <button
                 key={term}
                 className={`quick-chip ${query.toLowerCase() === term.toLowerCase() ? 'active' : ''}`}
@@ -237,15 +254,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           ) : results.length === 0 ? (
             <div className="empty-results-state">
               <Sparkles size={32} />
-              <p>No Pokémon cards found matching "{query}"</p>
-              <span className="hint-text">Try searching for a different card name or clearing filters.</span>
+              <p>No cards found matching "{query}" in {activeProvider.name}</p>
+              <span className="hint-text">Try searching for a different card name or switching TCG tabs.</span>
             </div>
           ) : (
             <>
               {/* Loaded Cards Grid */}
               <div className="cards-results-grid">
                 {results.map((card, idx) => {
-                  const imgUrl = getCardImageUrl(card, 'high', 'webp');
                   return (
                     <button
                       key={`${card.id}_${idx}`}
@@ -257,21 +273,26 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                     >
                       <div className="result-img-wrapper">
                         <img
-                          src={imgUrl}
+                          src={card.imageUrl}
                           alt={card.name}
                           loading="lazy"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            const fallback = getCardImageUrl(card, 'high', 'jpg');
-                            if (target.src !== fallback) target.src = fallback;
+                            if (card.fallbackImageUrl && target.src !== card.fallbackImageUrl) {
+                              target.src = card.fallbackImageUrl;
+                            }
                           }}
                         />
+                        {/* TCG Badge */}
+                        <span className="result-tcg-badge" data-tcg={card.tcgId}>
+                          {card.tcgId === 'pokemon' ? 'Pokémon' : card.tcgId === 'mtg' ? 'MTG' : card.tcgId}
+                        </span>
                       </div>
                       <div className="result-card-info">
                         <span className="result-card-name">{card.name}</span>
-                        {card.set && (
+                        {card.setName && (
                           <span className="result-card-set">
-                            {card.set.name} • {card.localId}
+                            {card.setName} {card.rarity ? `• ${card.rarity}` : ''}
                           </span>
                         )}
                       </div>
@@ -301,7 +322,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 {!hasMore && results.length > 0 && (
                   <div className="end-of-results-badge">
                     <CheckCircle2 size={16} />
-                    <span>Loaded all {results.length} Pokémon cards</span>
+                    <span>Loaded all {results.length} {activeProvider.shortName} cards</span>
                   </div>
                 )}
               </div>

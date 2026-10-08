@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plus, RefreshCw, Trash2, Move } from 'lucide-react';
-import type { GridSlot, CustomizationSettings } from '../types/pokemon';
-import { getCardImageUrl } from '../services/tcgdexApi';
+import type { GridSlot, CustomizationSettings } from '../types/card';
+import { tcgRegistry } from '../providers';
 
 interface CardSlotProps {
   slot: GridSlot;
@@ -25,7 +25,9 @@ export const CardSlot: React.FC<CardSlotProps> = ({
   isDragging,
 }) => {
   const { card, index } = slot;
-  const imageUrl = card ? getCardImageUrl(card, 'high', 'webp') : '';
+  const provider = card ? tcgRegistry.get(card.tcgId) : null;
+  const imageUrl = card ? provider?.getCardImageUrl?.(card) || card.imageUrl : '';
+  const fallbackUrl = card?.fallbackImageUrl || imageUrl;
 
   return (
     <div
@@ -48,8 +50,7 @@ export const CardSlot: React.FC<CardSlotProps> = ({
             loading="lazy"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              const fallbackUrl = getCardImageUrl(card, 'high', 'jpg');
-              if (target.src !== fallbackUrl) {
+              if (fallbackUrl && target.src !== fallbackUrl) {
                 target.src = fallbackUrl;
               }
             }}

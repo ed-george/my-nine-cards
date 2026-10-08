@@ -1,5 +1,5 @@
-import React from 'react';
-import { Plus, RefreshCw, Trash2, Move } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, RefreshCw, Trash2, Move, ImageOff } from 'lucide-react';
 import type { GridSlot, CustomizationSettings } from '../types/card';
 import { tcgRegistry } from '../providers';
 
@@ -25,9 +25,26 @@ export const CardSlot: React.FC<CardSlotProps> = ({
   isDragging,
 }) => {
   const { card, index } = slot;
+  const [imgError, setImgError] = useState(false);
+  const [triedFallback, setTriedFallback] = useState(false);
+
+  // Reset error tracking state when card changes
+  useEffect(() => {
+    setImgError(false);
+    setTriedFallback(false);
+  }, [card?.id]);
+
   const provider = card ? tcgRegistry.get(card.tcgId) : null;
   const imageUrl = card ? provider?.getCardImageUrl?.(card) || card.imageUrl : '';
   const fallbackUrl = card?.fallbackImageUrl || imageUrl;
+
+  const handleImageError = () => {
+    if (!triedFallback && fallbackUrl && fallbackUrl !== imageUrl) {
+      setTriedFallback(true);
+    } else {
+      setImgError(true);
+    }
+  };
 
   return (
     <div
@@ -42,19 +59,40 @@ export const CardSlot: React.FC<CardSlotProps> = ({
     >
       {card ? (
         <div className="card-container">
-          {/* Card Image */}
-          <img
-            src={imageUrl}
-            alt={card.name}
-            className="card-image"
-            loading="lazy"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              if (fallbackUrl && target.src !== fallbackUrl) {
-                target.src = fallbackUrl;
-              }
-            }}
-          />
+          {/* Card Image or Fallback Layout */}
+          {imgError ? (
+            <div className="card-fallback-layout">
+              <div className="fallback-header">
+                <span
+                  className="fallback-provider-tag"
+                  style={{ background: provider?.brandColor || '#0f172a' }}
+                >
+                  {provider?.shortName || 'TCG'}
+                </span>
+                {card.rarity && <span className="fallback-rarity">{card.rarity}</span>}
+              </div>
+
+              <div className="fallback-body">
+                <div className="fallback-icon-wrapper">
+                  <ImageOff size={28} className="fallback-icon" />
+                </div>
+                <h4 className="fallback-card-title">{card.name}</h4>
+                {card.setName && <p className="fallback-set-title">{card.setName}</p>}
+              </div>
+
+              <div className="fallback-footer">
+                <span className="fallback-id-badge">{card.rawId || card.id}</span>
+              </div>
+            </div>
+          ) : (
+            <img
+              src={triedFallback ? fallbackUrl : imageUrl}
+              alt={card.name}
+              className="card-image"
+              loading="lazy"
+              onError={handleImageError}
+            />
+          )}
 
           {/* Hover Control Overlay (hidden from export canvas via no-export class) */}
           <div className="slot-actions-overlay no-export">
@@ -83,7 +121,7 @@ export const CardSlot: React.FC<CardSlotProps> = ({
           </div>
 
           {/* Optional Card Name Overlay */}
-          {settings.showCardNames && (
+          {settings.showCardNames && !imgError && (
             <div className="card-name-footer">
               <span className="card-title-text">{card.name}</span>
             </div>

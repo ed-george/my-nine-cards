@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, X, Loader2, Sparkles, AlertCircle, CheckCircle2, Layers } from 'lucide-react';
+import { Search, X, Loader2, Sparkles, AlertCircle, CheckCircle2, Layers, ImageOff } from 'lucide-react';
 import type { TCGCard, SearchFilters, TCGProviderId } from '../types/card';
 import { tcgRegistry } from '../providers';
 import { sanitizeSearchQuery } from '../services/tcgdexApi';
@@ -12,6 +12,37 @@ interface SearchModalProps {
 }
 
 const ITEMS_PER_PAGE = 24;
+
+const SearchResultImage: React.FC<{ card: TCGCard }> = ({ card }) => {
+  const [imgError, setImgError] = useState(false);
+  const [triedFallback, setTriedFallback] = useState(false);
+
+  const handleImageError = () => {
+    if (!triedFallback && card.fallbackImageUrl && card.fallbackImageUrl !== card.imageUrl) {
+      setTriedFallback(true);
+    } else {
+      setImgError(true);
+    }
+  };
+
+  if (imgError) {
+    return (
+      <div className="result-img-fallback">
+        <ImageOff size={22} className="fallback-icon" />
+        <span className="fallback-mini-title">{card.name}</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={triedFallback && card.fallbackImageUrl ? card.fallbackImageUrl : card.imageUrl}
+      alt={card.name}
+      loading="lazy"
+      onError={handleImageError}
+    />
+  );
+};
 
 export const SearchModal: React.FC<SearchModalProps> = ({
   isOpen,
@@ -272,20 +303,10 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                       }}
                     >
                       <div className="result-img-wrapper">
-                        <img
-                          src={card.imageUrl}
-                          alt={card.name}
-                          loading="lazy"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            if (card.fallbackImageUrl && target.src !== card.fallbackImageUrl) {
-                              target.src = card.fallbackImageUrl;
-                            }
-                          }}
-                        />
+                        <SearchResultImage card={card} />
                         {/* TCG Badge */}
                         <span className="result-tcg-badge" data-tcg={card.tcgId}>
-                          {card.tcgId === 'pokemon' ? 'Pokémon' : card.tcgId === 'mtg' ? 'MTG' : card.tcgId}
+                          {card.tcgId === 'pokemon' ? 'PKMN' : card.tcgId === 'mtg' ? 'MTG' : card.tcgId}
                         </span>
                       </div>
                       <div className="result-card-info">
@@ -322,7 +343,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 {!hasMore && results.length > 0 && (
                   <div className="end-of-results-badge">
                     <CheckCircle2 size={16} />
-                    <span>Loaded all {results.length} {activeProvider.shortName} cards</span>
+                    <span>Loaded {results.length} cards</span>
                   </div>
                 )}
               </div>

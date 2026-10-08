@@ -38,8 +38,6 @@ export const pokemonProvider: TCGProvider = {
   attribution: 'Powered by TCGdex',
   attributionUrl: 'https://tcgdex.dev/',
   popularSearches: [
-    'Charizard',
-    'Pikachu',
     'Garbodor',
     'Gardevoir',
     'Rayquaza',

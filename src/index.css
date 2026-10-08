@@ -472,6 +472,120 @@ body {
   display: block;
 }
 
+/* Card Fallback Layout when image fails to load */
+.card-fallback-layout {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--color-bg-surface) 0%, var(--color-bg-elevated) 100%);
+  border: 1px solid var(--color-border);
+  border-radius: inherit;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.fallback-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.fallback-provider-tag {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fallback-rarity {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.fallback-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 4px;
+  flex: 1;
+}
+
+.fallback-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-dim);
+}
+
+.fallback-card-title {
+  font-family: var(--font-display);
+  font-size: clamp(0.75rem, 2cqw, 0.95rem);
+  font-weight: 700;
+  color: var(--color-text-main);
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.fallback-set-title {
+  font-size: clamp(0.6rem, 1.5cqw, 0.72rem);
+  color: var(--color-text-muted);
+}
+
+.fallback-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.fallback-id-badge {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  letter-spacing: 0.04em;
+}
+
+/* Search Result Image Fallback */
+.result-img-fallback {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 2.5 / 3.5;
+  background: var(--color-bg-elevated);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  text-align: center;
+}
+
+.fallback-mini-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  line-height: 1.1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* Empty Slot */
 .empty-slot-btn {
   width: 100%;

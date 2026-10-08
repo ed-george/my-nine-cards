@@ -6,7 +6,9 @@ declare global {
 
 interface CardAnalyticsData {
   id: string;
+  tcgId?: string;
   name: string;
+  setName?: string;
   set?: { name?: string };
   localId?: string;
 }
@@ -16,13 +18,17 @@ interface CardAnalyticsData {
  */
 export function trackCardSelected(card: CardAnalyticsData, slotIndex: number): void {
   if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+    const tcgType = card.tcgId || 'pokemon';
+    const setName = card.setName || card.set?.name || 'Unknown Set';
+
     window.gtag('event', 'select_card', {
       card_id: card.id,
       card_name: card.name,
-      card_set: card.set?.name || 'Unknown Set',
+      card_set: setName,
+      tcg_type: tcgType,
       slot_index: slotIndex + 1,
       event_category: 'Showcase Grid',
-      event_label: `${card.name} (${card.set?.name || 'Unknown Set'})`,
+      event_label: `${card.name} (${tcgType})`,
     });
   }
 }

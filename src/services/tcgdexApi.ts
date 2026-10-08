@@ -21,15 +21,20 @@ export interface RawPokemonCard {
 }
 
 /**
- * Sanitizes user search input to prevent query injection or parameter tampering
+ * Sanitizes user search input to prevent query injection, parameter tampering, or XSS
+ * while safely allowing spaces between words during typing.
  */
-export function sanitizeSearchQuery(input: string): string {
+export function sanitizeSearchQuery(input: string, isTyping = false): string {
   if (!input) return '';
   // 1. Strip out URL control characters, filter prefixes, and injection characters
   let clean = input.replace(/[?&#=:|\\/<>%"'`;{}()]/g, '');
-  // 2. Collapse multiple spaces and trim
-  clean = clean.replace(/\s+/g, ' ').trim();
-  // 3. Limit max search length to 50 characters
+  // 2. Collapse 2+ consecutive spaces into a single space and strip leading whitespace
+  clean = clean.replace(/\s+/g, ' ').replace(/^\s+/, '');
+  // 3. Trim trailing whitespace if not actively typing
+  if (!isTyping) {
+    clean = clean.trim();
+  }
+  // 4. Limit max search length to 50 characters
   return clean.slice(0, 50);
 }
 

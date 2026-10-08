@@ -239,7 +239,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             className="search-input"
             placeholder={`Search ${activeProvider.shortName} card name...`}
             value={query}
-            onChange={(e) => setQuery(sanitizeSearchQuery(e.target.value))}
+            onChange={(e) => setQuery(sanitizeSearchQuery(e.target.value, true))}
           />
           {query && (
             <button className="clear-search-btn" onClick={() => setQuery('')}>

@@ -16,7 +16,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
         <div className="modal-header">
           <div className="about-title-group">
             <h3 className="modal-title">About My 9 Cards</h3>
-            <p className="modal-subtitle">Pokémon TCG Showcase Grid Builder</p>
+            <p className="modal-subtitle">TCG Showcase Grid Builder</p>
           </div>
           <button className="modal-close-btn" onClick={onClose} title="Close info">
             <X size={20} />
@@ -35,7 +35,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div className="about-links-group">
-            <span className="links-group-label">Connect & Data</span>
+            <span className="links-group-label">Connect</span>
 
             {/* X / Twitter Link */}
             <a
@@ -56,7 +56,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
 
             {/* Personal Website Link */}
             <a
-              href="https://spght.dev"
+              href="https://ptcgeni.us"
               target="_blank"
               rel="noopener noreferrer"
               className="about-link-item"
@@ -65,13 +65,14 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                 <Globe size={18} className="globe-icon" />
                 <div className="link-text-stack">
                   <span className="link-title">Personal Website</span>
-                  <span className="link-handle">spght.dev</span>
+                  <span className="link-handle">ptcgeni.us</span>
                 </div>
               </div>
               <ExternalLink size={16} className="external-icon" />
             </a>
 
-            {/* TCGdex Link */}
+            {/* Powered By Links */}
+            <span className="links-group-label">Powered By</span>
             <a
               href="https://tcgdex.dev/"
               target="_blank"
@@ -81,20 +82,43 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
               <div className="link-left">
                 <Database size={18} className="tcgdex-icon" />
                 <div className="link-text-stack">
-                  <span className="link-title">Powered by TCGdex</span>
+                  <span className="link-title">Pokémon - TCGdex</span>
                   <span className="link-handle">tcgdex.dev</span>
+                </div>
+              </div>
+              <ExternalLink size={16} className="external-icon" />
+            </a>
+
+            <a
+              href="https://scryfall.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="about-link-item"
+            >
+              <div className="link-left">
+                <Database size={18} className="tcgdex-icon" />
+                <div className="link-text-stack">
+                  <span className="link-title">MTG - Scryfall</span>
+                  <span className="link-handle">scryfall.com</span>
                 </div>
               </div>
               <ExternalLink size={16} className="external-icon" />
             </a>
           </div>
 
-          <span className="links-group-label">Copyright Notice</span>
+          <span className="links-group-label">Copyright Notices</span>
 
           {/* Pokémon TCG Copyright Disclaimer */}
           <div className="about-disclaimer-box">
             <p className="disclaimer-text">
               The content on this website surrounding the Pokémon Trading Card Game and Pokémon Trading Card Game Pocket, including but not limited to card images and text, is copyright The Pokémon Company (Pokémon), Nintendo, DeNA, Game Freak and/or Creatures Inc. This website is fan made and not produced by, endorsed by, supported by, or affiliated with Pokémon, Nintendo, Game Freak, Creatures or any afformentioned entities.
+            </p>
+          </div>
+
+          {/* MTG Copyright Disclaimer */}
+          <div className="about-disclaimer-box">
+            <p className="disclaimer-text">
+              The content on this website surrounding Magic: The Gathering, including but not limited to card images and text, is copyright Wizards of the Coast LLC. This website is fan made and not produced by, endorsed by, supported by, or affiliated with Wizards of the Coast LLC.
             </p>
           </div>
         </div>

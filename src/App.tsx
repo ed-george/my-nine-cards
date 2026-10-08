@@ -103,7 +103,7 @@ export const App: React.FC = () => {
 
   // Reset grid
   const handleResetGrid = () => {
-    if (window.confirm('Are you sure you want to clear all 9 cards from your grid?')) {
+    if (window.confirm('Are you sure you want to clear all cards from your grid?')) {
       setSlots(Array.from({ length: 9 }, (_, i) => ({ index: i, card: null })));
     }
   };

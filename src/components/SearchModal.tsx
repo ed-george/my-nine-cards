@@ -285,8 +285,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           ) : results.length === 0 ? (
             <div className="empty-results-state">
               <Sparkles size={32} />
-              <p>No cards found matching "{query}" in {activeProvider.name}</p>
-              <span className="hint-text">Try searching for a different card name or switching TCG tabs.</span>
+              <p>No cards found matching "{query}"</p>
+              <span className="hint-text">Try searching for a different card name</span>
             </div>
           ) : (
             <>
@@ -313,7 +313,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                         <span className="result-card-name">{card.name}</span>
                         {card.setName && (
                           <span className="result-card-set">
-                            {card.setName} {card.rarity ? `• ${card.rarity}` : ''}
+                            {card.setName}
                           </span>
                         )}
                       </div>

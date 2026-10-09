@@ -20,7 +20,7 @@ export async function searchScryfallCards(filters: SearchFilters): Promise<Searc
   }
 
   try {
-    const url = `${SCRYFALL_BASE_URL}/cards/search?q=${encodeURIComponent(cleanQuery)}+lang:any&page=${page}`;
+    const url = `${SCRYFALL_BASE_URL}/cards/search?q=${encodeURIComponent(cleanQuery)}+lang:any&include_variations=true&page=${page}`;
     const response = await fetch(url);
 
     if (!response.ok) {

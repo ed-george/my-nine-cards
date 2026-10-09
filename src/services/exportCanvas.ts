@@ -1,4 +1,55 @@
 import { toPng, toJpeg, toBlob } from 'html-to-image';
+import { DEFAULT_API_HEADERS } from './tcgdexApi';
+
+/**
+ * Detects if the current device is running iOS (iPhone, iPad, iPod)
+ */
+export function isIOS(): boolean {
+  if (typeof window === 'undefined' || !navigator) return false;
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
+}
+
+/**
+ * Detects if the current device is a mobile device (iPhone, iPad, Android phone/tablet)
+ */
+export function isMobileDevice(): boolean {
+  if (typeof window === 'undefined' || !navigator) return false;
+  const ua = navigator.userAgent || '';
+  const isTouchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) || isTouchMac;
+}
+
+/**
+ * Checks if the browser supports Web Share API with image file sharing (iOS 15+ Safari, Android Chrome)
+ */
+export function canShareImages(): boolean {
+  if (typeof window === 'undefined' || !navigator || !navigator.share || !navigator.canShare) {
+    return false;
+  }
+  try {
+    const testFile = new File(['test'], 'test.png', { type: 'image/png' });
+    return navigator.canShare({ files: [testFile] });
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Converts a Base64 Data URL to a Blob
+ */
+export function dataUrlToBlob(dataUrl: string, mimeType = 'image/png'): Blob {
+  const arr = dataUrl.split(',');
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mimeType });
+}
 
 /**
  * Converts a Blob to a Base64 data URL
@@ -41,26 +92,21 @@ function loadImageElementAsBase64(url: string, useCrossOrigin = true): Promise<s
 
 /**
  * Converts an image URL to a base64 data URL to prevent CORS canvas export failures across browsers.
- * Uses 4-tier fallback:
- * 1. Direct CORS fetch with cache-busting parameter to prevent non-CORS disk cache hits
- * 2. HTMLImageElement + Canvas data URL conversion
- * 3. Fallback format (.jpg instead of .webp)
- * 4. High-reliability CORS proxy fallback
  */
 async function getBase64ImageFromUrl(url: string): Promise<string> {
   if (!url || url.startsWith('data:')) return url;
 
-  // Tier 1: Direct CORS fetch with cache-busting to bypass stale non-CORS disk cache
+  // Tier 1: Direct CORS fetch with cache-busting
   try {
     const fetchUrl = url.includes('?') ? `${url}&cors_bypass=1` : `${url}?cors_bypass=1`;
-    const response = await fetch(fetchUrl, { mode: 'cors', cache: 'reload' });
+    const response = await fetch(fetchUrl, { mode: 'cors', cache: 'reload', headers: DEFAULT_API_HEADERS });
     if (response.ok) {
       const blob = await response.blob();
       const base64 = await blobToBase64(blob);
       if (base64.startsWith('data:image')) return base64;
     }
   } catch {
-    // Continue to next tier
+    // Continue
   }
 
   // Tier 2: HTMLImageElement Canvas Conversion
@@ -68,7 +114,7 @@ async function getBase64ImageFromUrl(url: string): Promise<string> {
     const base64 = await loadImageElementAsBase64(url, true);
     if (base64 && base64.startsWith('data:image')) return base64;
   } catch {
-    // Continue to next tier
+    // Continue
   }
 
   // Tier 3: Format Fallback (.webp -> .jpg)
@@ -76,21 +122,21 @@ async function getBase64ImageFromUrl(url: string): Promise<string> {
     try {
       const jpgUrl = url.replace(/\.webp$/, '.jpg');
       const fetchUrl = jpgUrl.includes('?') ? `${jpgUrl}&cors_bypass=1` : `${jpgUrl}?cors_bypass=1`;
-      const response = await fetch(fetchUrl, { mode: 'cors', cache: 'reload' });
+      const response = await fetch(fetchUrl, { mode: 'cors', cache: 'reload', headers: DEFAULT_API_HEADERS });
       if (response.ok) {
         const blob = await response.blob();
         const base64 = await blobToBase64(blob);
         if (base64.startsWith('data:image')) return base64;
       }
     } catch {
-      // Continue to next tier
+      // Continue
     }
   }
 
-  // Tier 4: Public CORS Proxy Fallback for strict CDN policies
+  // Tier 4: Public CORS Proxy Fallback
   try {
     const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-    const response = await fetch(proxyUrl);
+    const response = await fetch(proxyUrl, { headers: DEFAULT_API_HEADERS });
     if (response.ok) {
       const blob = await response.blob();
       const base64 = await blobToBase64(blob);
@@ -105,7 +151,6 @@ async function getBase64ImageFromUrl(url: string): Promise<string> {
 
 /**
  * Pre-processes all img tags in element, converting src URLs to inline Base64 data URLs
- * and waiting for full decoding (critical for Edge/Chromium canvas rendering).
  */
 async function inlineElementImages(element: HTMLElement): Promise<() => void> {
   const imgElements = Array.from(element.querySelectorAll('img'));
@@ -118,7 +163,6 @@ async function inlineElementImages(element: HTMLElement): Promise<() => void> {
         const base64 = await getBase64ImageFromUrl(img.src);
         if (base64.startsWith('data:')) {
           img.src = base64;
-          // Ensure image decoding is complete in Edge/Chromium engine
           if ('decode' in img && typeof img.decode === 'function') {
             await img.decode().catch(() => {});
           }
@@ -127,7 +171,6 @@ async function inlineElementImages(element: HTMLElement): Promise<() => void> {
     })
   );
 
-  // Return restore function
   return () => {
     originalSrcs.forEach(({ img, src }) => {
       img.src = src;
@@ -135,12 +178,9 @@ async function inlineElementImages(element: HTMLElement): Promise<() => void> {
   };
 }
 
-/**
- * Common configuration options for html-to-image
- */
 const getExportOptions = (skipFonts = false) => ({
   quality: 0.95,
-  pixelRatio: 2, // 2x high-resolution export
+  pixelRatio: 2,
   cacheBust: false,
   skipFonts,
   filter: (node: HTMLElement) => {
@@ -151,15 +191,20 @@ const getExportOptions = (skipFonts = false) => ({
   },
 });
 
+export interface ExportResult {
+  dataUrl: string;
+  blob: Blob;
+  shared: boolean;
+}
+
 /**
- * Captures the target grid element and downloads it as high-res PNG or JPEG
- * Compatible with Microsoft Edge, Chrome, Safari, and Firefox.
+ * Captures the target grid element and handles downloads / native iOS sharing
  */
 export async function downloadGridImage(
   element: HTMLElement,
   format: 'png' | 'jpeg' = 'png',
-  fileName: string = 'my-9-pokemon-cards.png'
-): Promise<void> {
+  fileName: string = 'my-9-cards.png'
+): Promise<ExportResult> {
   const restoreImages = await inlineElementImages(element);
 
   try {
@@ -167,7 +212,6 @@ export async function downloadGridImage(
     const primaryOptions = getExportOptions(false);
 
     try {
-      // Warmup pass for Edge/Chromium SVG element asset caching
       if (format === 'jpeg') {
         await toJpeg(element, { ...primaryOptions, backgroundColor: '#ffffff' });
         dataUrl = await toJpeg(element, { ...primaryOptions, backgroundColor: '#ffffff' });
@@ -177,7 +221,6 @@ export async function downloadGridImage(
       }
     } catch (primaryErr) {
       console.warn('Primary export pass failed, retrying with fallback options:', primaryErr);
-      // Fallback pass skipping external font embed if font fetch blocked
       const fallbackOptions = getExportOptions(true);
       if (format === 'jpeg') {
         dataUrl = await toJpeg(element, { ...fallbackOptions, backgroundColor: '#ffffff' });
@@ -186,13 +229,37 @@ export async function downloadGridImage(
       }
     }
 
-    // Trigger download using DOM-attached link (required for Edge / Firefox)
-    const link = document.createElement('a');
-    link.download = fileName;
-    link.href = dataUrl;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+    const blob = dataUrlToBlob(dataUrl, mimeType);
+    let shared = false;
+
+    // Web Share API (iOS 15+ Safari / Mobile Native Share Sheet)
+    if (isMobileDevice() && canShareImages()) {
+      try {
+        const file = new File([blob], fileName, { type: mimeType });
+        await navigator.share({
+          files: [file],
+          title: 'My 9 Cards Showcase',
+        });
+        shared = true;
+      } catch (shareErr) {
+        console.warn('Native share sheet dismissed or not completed:', shareErr);
+      }
+    }
+
+    // Standard download link (using Blob URL for mobile/desktop browser compatibility)
+    if (!shared) {
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = fileName;
+      link.href = blobUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+    }
+
+    return { dataUrl, blob, shared };
   } catch (error) {
     console.error('Failed to export grid image:', error);
     throw error;
@@ -202,7 +269,7 @@ export async function downloadGridImage(
 }
 
 /**
- * Copies the grid image directly to user's system clipboard (Edge/Chrome/Safari supported)
+ * Copies the grid image directly to user's system clipboard
  */
 export async function copyGridImageToClipboard(element: HTMLElement): Promise<boolean> {
   const restoreImages = await inlineElementImages(element);

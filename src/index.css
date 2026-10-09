@@ -1497,6 +1497,53 @@ body {
   text-align: center;
 }
 
+/* Export Preview Container (iOS & Mobile friendly) */
+.export-preview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+}
+
+.export-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.export-preview-header .sparkle-icon {
+  color: #2563eb;
+}
+
+.export-preview-img-wrapper {
+  width: 100%;
+  max-height: 260px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.export-preview-img {
+  width: 100%;
+  height: auto;
+  max-height: 260px;
+  object-fit: contain;
+  display: block;
+  user-select: auto;
+  -webkit-user-select: auto;
+  -webkit-touch-callout: default;
+}
+
 /* Responsive Rules */
 @media (max-width: 900px) {
   .layout-split {

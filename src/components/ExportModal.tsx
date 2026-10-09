@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
-import { Download, Copy, X, Check, Loader2, Image as ImageIcon } from 'lucide-react';
-import { downloadGridImage, copyGridImageToClipboard } from '../services/exportCanvas';
+import { Download, Copy, X, Check, Loader2, Image as ImageIcon, Share2, Sparkles } from 'lucide-react';
+import {
+  downloadGridImage,
+  copyGridImageToClipboard,
+  isIOS,
+  isMobileDevice,
+  canShareImages,
+} from '../services/exportCanvas';
 import { trackExportImage } from '../services/analytics';
 
 interface ExportModalProps {
@@ -19,6 +25,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const [downloadingFormat, setDownloadingFormat] = useState<'png' | 'jpeg' | null>(null);
   const [copiedImage, setCopiedImage] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [generatedPreviewUrl, setGeneratedPreviewUrl] = useState<string | null>(null);
+  const [wasShared, setWasShared] = useState(false);
+
+  const isMobile = isMobileDevice();
+  const isIOSDevice = isIOS();
+  const isShareSupported = isMobile && canShareImages();
 
   if (!isOpen) return null;
 
@@ -26,6 +38,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     if (!exportRef.current) return;
     setDownloadingFormat(format);
     setErrorMessage(null);
+    setWasShared(false);
 
     // Track analytics event
     trackExportImage(format);
@@ -38,9 +51,13 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     const fileName = `${safeTitle}.${format}`;
 
     try {
-      await downloadGridImage(exportRef.current, format, fileName);
+      const result = await downloadGridImage(exportRef.current, format, fileName);
+      setGeneratedPreviewUrl(result.dataUrl);
+      if (result.shared) {
+        setWasShared(true);
+      }
     } catch (err) {
-      setErrorMessage('Failed to generate image download. Please try copying to clipboard.');
+      setErrorMessage('Failed to generate image download. Please try copying to clipboard or tapping & holding preview.');
     } finally {
       setDownloadingFormat(null);
     }
@@ -55,7 +72,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       setCopiedImage(true);
       setTimeout(() => setCopiedImage(false), 2500);
     } else {
-      setErrorMessage('Browser blocked image clipboard copy. Try downloading PNG instead.');
+      setErrorMessage('Browser blocked image clipboard copy. Try downloading PNG or using Native Share.');
     }
   };
 
@@ -66,16 +83,41 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         <div className="modal-header">
           <div>
             <h3 className="modal-title">Export Showcase Image</h3>
-            <p className="modal-subtitle">Save high-resolution image to post on Twitter/X, Instagram, or Reddit</p>
+            <p className="modal-subtitle">
+              Save high-resolution image to post on Twitter/X, Instagram, or Reddit
+            </p>
           </div>
           <button className="modal-close-btn" onClick={onClose} title="Close export modal">
             <X size={20} />
           </button>
         </div>
 
+        {/* Generated Image Preview Area (only shown on mobile devices, e.g. for iOS press & hold) */}
+        {isMobile && generatedPreviewUrl ? (
+          <div className="export-preview-section">
+            <div className="export-preview-header">
+              <Sparkles size={16} className="sparkle-icon" />
+              <span>
+                {wasShared
+                  ? 'Image shared via native Share Sheet!'
+                  : isIOSDevice
+                  ? 'Tap & hold image below to Save to Photos'
+                  : 'Image generated ready to save'}
+              </span>
+            </div>
+            <div className="export-preview-img-wrapper">
+              <img
+                src={generatedPreviewUrl}
+                alt="Generated Showcase Preview"
+                className="export-preview-img"
+              />
+            </div>
+          </div>
+        ) : null}
+
         {/* Action Buttons */}
         <div className="export-actions-grid">
-          {/* Download PNG */}
+          {/* Download PNG / Native Share */}
           <button
             className="export-card-btn primary"
             disabled={downloadingFormat !== null}
@@ -83,12 +125,20 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           >
             {downloadingFormat === 'png' ? (
               <Loader2 className="spinner-icon" size={24} />
+            ) : isShareSupported ? (
+              <Share2 size={24} />
             ) : (
               <Download size={24} />
             )}
             <div className="btn-label-group">
-              <span className="main-label">Download PNG Image</span>
-              <span className="sub-label">High-resolution image</span>
+              <span className="main-label">
+                {isShareSupported ? 'Share / Save Image (PNG)' : 'Download PNG Image'}
+              </span>
+              <span className="sub-label">
+                {isShareSupported
+                  ? (isIOSDevice ? 'Opens iOS Share Sheet & Save to Photos' : 'Opens Share Sheet & Save to Gallery')
+                  : 'High-resolution 4K image'}
+              </span>
             </div>
           </button>
 

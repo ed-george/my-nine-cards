@@ -2,6 +2,14 @@ import type { CardSetSummary, SearchFilters } from '../types/card';
 
 const BASE_URL = 'https://api.tcgdex.net/v2/en';
 
+// Custom User-Agent header string for external API calls
+export const DEFAULT_USER_AGENT = 'My9Cards/1.0 (via my9.cards)';
+
+export const DEFAULT_API_HEADERS: Record<string, string> = {
+  'User-Agent': DEFAULT_USER_AGENT,
+  'X-User-Agent': DEFAULT_USER_AGENT,
+};
+
 // Fallback card back image URL
 export const CARD_BACK_IMAGE = 'https://assets.tcgdex.net/en/swsh/swsh1/1/high.webp';
 

@@ -2,6 +2,8 @@ import type { TCGProvider } from './types';
 import type { TCGCard, TCGProviderId, SearchFilters, SearchResults } from '../types/card';
 import { pokemonProvider, mapPokemonCardToTCGCard } from './pokemon';
 import { mtgProvider } from './mtg';
+import { riftboundProvider } from './riftbound';
+
 
 class TCGProviderRegistry {
   private providers = new Map<TCGProviderId, TCGProvider>();
@@ -11,6 +13,7 @@ class TCGProviderRegistry {
     // Register default providers
     this.register(pokemonProvider);
     this.register(mtgProvider);
+    this.register(riftboundProvider);
   }
 
   /**

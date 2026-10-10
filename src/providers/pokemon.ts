@@ -32,8 +32,8 @@ export function mapPokemonCardToTCGCard(raw: any): TCGCard {
 
 export const pokemonProvider: TCGProvider = {
   id: 'pokemon',
-  name: 'Pokémon TCG',
-  shortName: 'Pokémon',
+  name: 'Pokémon',
+  shortName: 'PKMN',
   brandColor: '#ef4444',
   attribution: 'Powered by TCGdex',
   attributionUrl: 'https://tcgdex.dev/',

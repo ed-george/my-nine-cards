@@ -196,7 +196,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               {loading ? (
                 `Searching ${activeProvider.name} database...`
               ) : totalCount > 0 ? (
-                <>Found <strong>{totalCount}</strong> {activeProvider.shortName} cards matching "{query}"</>
+                <>Found <strong>{totalCount}</strong> {activeProvider.name} cards matching "{query}"</>
               ) : (
                 `Search cards across supported Trading Card Games`
               )}
@@ -237,7 +237,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             ref={inputRef}
             type="text"
             className="search-input"
-            placeholder={`Search ${activeProvider.shortName} card name...`}
+            placeholder={`Search ${activeProvider.name} card name...`}
             value={query}
             onChange={(e) => setQuery(sanitizeSearchQuery(e.target.value, true))}
           />
@@ -306,7 +306,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                         <SearchResultImage card={card} />
                         {/* TCG Badge */}
                         <span className="result-tcg-badge" data-tcg={card.tcgId}>
-                          {card.tcgId === 'pokemon' ? 'PKMN' : card.tcgId === 'mtg' ? 'MTG' : card.tcgId}
+                          {activeProvider.shortName}
                         </span>
                       </div>
                       <div className="result-card-info">

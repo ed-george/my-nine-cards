@@ -38,6 +38,7 @@ const SearchResultImage: React.FC<{ card: TCGCard }> = ({ card }) => {
     <img
       src={triedFallback && card.fallbackImageUrl ? card.fallbackImageUrl : card.imageUrl}
       alt={card.name}
+      className={card.orientation === 'landscape' ? 'landscape' : ''}
       loading="lazy"
       onError={handleImageError}
     />

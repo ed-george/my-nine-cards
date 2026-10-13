@@ -88,7 +88,7 @@ export const CardSlot: React.FC<CardSlotProps> = ({
             <img
               src={triedFallback ? fallbackUrl : imageUrl}
               alt={card.name}
-              className="card-image"
+              className={`card-image ${card.orientation === 'landscape' ? 'landscape' : ''}`}
               loading="lazy"
               onError={handleImageError}
             />

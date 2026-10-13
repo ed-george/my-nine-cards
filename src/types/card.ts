@@ -1,4 +1,4 @@
-export type TCGProviderId = 'pokemon' | 'mtg' | 'yugioh' | 'lorcana' | string;
+export type TCGProviderId = 'pokemon' | 'mtg' | 'riftbound' | 'yugioh' | 'lorcana' | string;
 
 export interface CardSetSummary {
   id: string;
@@ -24,6 +24,7 @@ export interface TCGCard {
   setLogo?: string;
   rarity?: string;
   types?: string[];
+  orientation?: 'portrait' | 'landscape';
   details?: {
     hp?: number | string;
     stage?: string;
@@ -47,7 +48,11 @@ export type ThemeId =
   | 'water-vmax'
   | 'tag-team-gold'
   | 'psychic-ex'
-  | 'tera-crystal';
+  | 'tera-crystal'
+  | 'mythic-rare'
+  | 'planeswalker-spark'
+  | 'spiritforged-foil'
+  | 'champion-signature';
 
 export interface ThemeConfig {
   id: ThemeId;

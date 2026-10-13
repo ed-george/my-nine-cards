@@ -112,13 +112,26 @@ export async function searchRiftcodexCards(filters: SearchFilters): Promise<Sear
 export async function getRiftboundCardById(id: string): Promise<TCGCard | null> {
   const cleanId = id.replace(/^riftbound:/, '');
   try {
-    const url = `${RIFTCODEX_BASE_URL}/cards/riftbound/${encodeURIComponent(cleanId)}`;
-    const response = await fetch(url);
-    if (!response.ok) return null;
-    const cards: RiftcodexCard[] = await response.json();
-    if (Array.isArray(cards) && cards.length > 0) {
-      return mapRiftboundCardToTCGCard(cards[0]);
+    // 1. Try querying by Riftbound ID (e.g. ven-r03, ogn-011-298)
+    const riftboundUrl = `${RIFTCODEX_BASE_URL}/cards/riftbound/${encodeURIComponent(cleanId)}`;
+    const riftboundRes = await fetch(riftboundUrl);
+    if (riftboundRes.ok) {
+      const cards: RiftcodexCard[] = await riftboundRes.json();
+      if (Array.isArray(cards) && cards.length > 0) {
+        return mapRiftboundCardToTCGCard(cards[0]);
+      }
     }
+
+    // 2. Fallback to direct Riftcodex database ID (24-char hex)
+    const directUrl = `${RIFTCODEX_BASE_URL}/cards/${encodeURIComponent(cleanId)}`;
+    const directRes = await fetch(directUrl);
+    if (directRes.ok) {
+      const card: RiftcodexCard = await directRes.json();
+      if (card && card.id) {
+        return mapRiftboundCardToTCGCard(card);
+      }
+    }
+
     return null;
   } catch (error) {
     console.error('Failed to get Riftbound card by id:', error);

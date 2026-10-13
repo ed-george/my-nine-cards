@@ -133,10 +133,10 @@ async function getBase64ImageFromUrl(url: string): Promise<string> {
     }
   }
 
-  // Tier 4: Public CORS Proxy Fallback
+  // Tier 4: Public CORS / Image Proxy Fallback
   try {
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-    const response = await fetch(proxyUrl, { headers: DEFAULT_API_HEADERS });
+    const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
     if (response.ok) {
       const blob = await response.blob();
       const base64 = await blobToBase64(blob);

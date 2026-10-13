@@ -1,6 +1,10 @@
 import type { TCGProvider } from './types';
 import type { TCGCard, SearchFilters, SearchResults } from '../types/card';
-import { searchScryfallCards } from '../services/scryfallApi';
+import {
+  searchScryfallCards,
+  getScryfallCardById,
+  mapScryfallCardToTCGCard,
+} from '../services/scryfallApi';
 
 export const mtgProvider: TCGProvider = {
   id: 'mtg',
@@ -25,7 +29,13 @@ export const mtgProvider: TCGProvider = {
     return searchScryfallCards(filters);
   },
 
+  async getCardById(id: string): Promise<TCGCard | null> {
+    return getScryfallCardById(id);
+  },
+
   getCardImageUrl(card: TCGCard): string {
     return card.imageUrl;
   },
 };
+
+export { mapScryfallCardToTCGCard };

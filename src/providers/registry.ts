@@ -58,6 +58,18 @@ class TCGProviderRegistry {
   }
 
   /**
+   * Fetches a card by ID using the matching provider
+   */
+  public async getCardById(id: string, tcgId?: TCGProviderId): Promise<TCGCard | null> {
+    const providerId = tcgId || (id.includes(':') ? id.split(':')[0] : undefined);
+    const provider = this.get(providerId);
+    if (provider.getCardById) {
+      return provider.getCardById(id);
+    }
+    return null;
+  }
+
+  /**
    * Normalizes any card object (including legacy PokemonCard format) into a unified TCGCard
    */
   public normalizeCard(rawCard: any): TCGCard | null {

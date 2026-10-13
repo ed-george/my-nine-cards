@@ -20,13 +20,17 @@ const DEFAULT_SETTINGS: CustomizationSettings = {
 };
 
 export const App: React.FC = () => {
-  // 9 Grid slots
-  const [slots, setSlots] = useState<GridSlot[]>(() =>
-    Array.from({ length: 9 }, (_, i) => ({ index: i, card: null }))
-  );
+  // 9 Grid slots loaded initially from localStorage or empty
+  const [slots, setSlots] = useState<GridSlot[]>(() => {
+    const localState = loadFromLocalStorage(DEFAULT_SETTINGS);
+    return localState?.slots || Array.from({ length: 9 }, (_, i) => ({ index: i, card: null }));
+  });
 
-  // Customization Settings
-  const [settings, setSettings] = useState<CustomizationSettings>(DEFAULT_SETTINGS);
+  // Customization Settings loaded initially from localStorage or default
+  const [settings, setSettings] = useState<CustomizationSettings>(() => {
+    const localState = loadFromLocalStorage(DEFAULT_SETTINGS);
+    return localState?.settings || DEFAULT_SETTINGS;
+  });
 
   // Modals & Panels State
   const [searchModalOpen, setSearchModalOpen] = useState(false);
@@ -34,26 +38,13 @@ export const App: React.FC = () => {
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [customizerOpen, setCustomizerOpen] = useState(false);
   const [aboutModalOpen, setAboutModalOpen] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
 
   const exportRef = useRef<HTMLDivElement | null>(null);
 
-  // Load state on mount from localStorage
-  useEffect(() => {
-    const localState = loadFromLocalStorage(DEFAULT_SETTINGS);
-    if (localState) {
-      setSlots(localState.slots);
-      setSettings(localState.settings);
-    }
-    setIsInitializing(false);
-  }, []);
-
   // Sync to localStorage whenever slots or settings change
   useEffect(() => {
-    if (!isInitializing) {
-      saveToLocalStorage(slots, settings);
-    }
-  }, [slots, settings, isInitializing]);
+    saveToLocalStorage(slots, settings);
+  }, [slots, settings]);
 
   // Open search modal for a target slot or next empty slot
   const handleOpenSearch = (slotIndex?: number) => {

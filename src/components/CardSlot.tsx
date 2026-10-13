@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, RefreshCw, Trash2, Move, ImageOff } from 'lucide-react';
 import type { GridSlot, CustomizationSettings } from '../types/card';
 import { tcgRegistry } from '../providers';
@@ -27,12 +27,14 @@ export const CardSlot: React.FC<CardSlotProps> = ({
   const { card, index } = slot;
   const [imgError, setImgError] = useState(false);
   const [triedFallback, setTriedFallback] = useState(false);
+  const [prevCardId, setPrevCardId] = useState(card?.id);
 
   // Reset error tracking state when card changes
-  useEffect(() => {
+  if (card?.id !== prevCardId) {
+    setPrevCardId(card?.id);
     setImgError(false);
     setTriedFallback(false);
-  }, [card?.id]);
+  }
 
   const provider = card ? tcgRegistry.get(card.tcgId) : null;
   const imageUrl = card ? provider?.getCardImageUrl?.(card) || card.imageUrl : '';

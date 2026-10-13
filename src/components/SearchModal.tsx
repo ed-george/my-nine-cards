@@ -67,12 +67,83 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const searchRequestIdRef = useRef(0);
+
+  // Execute search using the active TCG provider
+  const executeSearch = useCallback(
+    async (
+      searchTerm: string,
+      tcgId: TCGProviderId,
+      targetPage: number,
+      isAppend: boolean
+    ) => {
+      const cleanSearchTerm = sanitizeSearchQuery(searchTerm);
+
+      if (!cleanSearchTerm) {
+        setResults([]);
+        setTotalCount(0);
+        setHasMore(false);
+        setLoading(false);
+        setLoadingMore(false);
+        return;
+      }
+
+      const requestId = ++searchRequestIdRef.current;
+
+      if (isAppend) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = 0;
+        }
+      }
+
+      setError(null);
+
+      const filters: SearchFilters = {
+        query: cleanSearchTerm,
+        tcgId,
+        page: targetPage,
+        itemsPerPage: ITEMS_PER_PAGE,
+      };
+
+      try {
+        const searchRes = await tcgRegistry.searchCards(filters);
+
+        // Discard responses from superseded requests
+        if (requestId !== searchRequestIdRef.current) return;
+
+        if (isAppend) {
+          setResults((prev) => {
+            const existingIds = new Set(prev.map((c) => c.id));
+            const newUnique = searchRes.cards.filter((c) => !existingIds.has(c.id));
+            return [...prev, ...newUnique];
+          });
+        } else {
+          setResults(searchRes.cards);
+        }
+
+        setTotalCount(searchRes.totalCount);
+        setHasMore(searchRes.hasMore);
+        setPage(targetPage);
+      } catch {
+        if (requestId !== searchRequestIdRef.current) return;
+        setError(`Failed to fetch cards from ${tcgRegistry.get(tcgId).name}. Please try again.`);
+      } finally {
+        if (requestId === searchRequestIdRef.current) {
+          setLoading(false);
+          setLoadingMore(false);
+        }
+      }
+    },
+    []
+  );
 
   // Focus search input when modal opens
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 100);
-      executeSearch(query, selectedTcgId, 1, false);
     }
   }, [isOpen]);
 
@@ -80,77 +151,18 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     const timer = setTimeout(() => {
-      setPage(1);
       executeSearch(query, selectedTcgId, 1, false);
-    }, 350);
+    }, 300);
 
     return () => clearTimeout(timer);
-  }, [query, selectedTcgId, isOpen]);
-
-  // Execute search using the active TCG provider
-  const executeSearch = async (
-    searchTerm: string,
-    tcgId: TCGProviderId,
-    targetPage: number,
-    isAppend: boolean
-  ) => {
-    const cleanSearchTerm = sanitizeSearchQuery(searchTerm);
-
-    if (!cleanSearchTerm) {
-      setResults([]);
-      setTotalCount(0);
-      setHasMore(false);
-      return;
-    }
-
-    if (isAppend) {
-      setLoadingMore(true);
-    } else {
-      setLoading(true);
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTop = 0;
-      }
-    }
-
-    setError(null);
-
-    const filters: SearchFilters = {
-      query: cleanSearchTerm,
-      tcgId,
-      page: targetPage,
-      itemsPerPage: ITEMS_PER_PAGE,
-    };
-
-    try {
-      const searchRes = await tcgRegistry.searchCards(filters);
-
-      if (isAppend) {
-        setResults((prev) => {
-          const existingIds = new Set(prev.map((c) => c.id));
-          const newUnique = searchRes.cards.filter((c) => !existingIds.has(c.id));
-          return [...prev, ...newUnique];
-        });
-      } else {
-        setResults(searchRes.cards);
-      }
-
-      setTotalCount(searchRes.totalCount);
-      setHasMore(searchRes.hasMore);
-      setPage(targetPage);
-    } catch (err) {
-      setError(`Failed to fetch cards from ${activeProvider.name}. Please try again.`);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
+  }, [query, selectedTcgId, isOpen, executeSearch]);
 
   // Function to load the next page on infinite scroll
   const loadNextPage = useCallback(() => {
     if (loading || loadingMore || !hasMore) return;
     const nextPage = page + 1;
     executeSearch(query, selectedTcgId, nextPage, true);
-  }, [loading, loadingMore, hasMore, page, query, selectedTcgId]);
+  }, [loading, loadingMore, hasMore, page, query, selectedTcgId, executeSearch]);
 
   // IntersectionObserver sentinel for auto infinite scroll
   useEffect(() => {
@@ -307,7 +319,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                         <SearchResultImage card={card} />
                         {/* TCG Badge */}
                         <span className="result-tcg-badge" data-tcg={card.tcgId}>
-                          {activeProvider.shortName}
+                          {tcgRegistry.get(card.tcgId)?.shortName || card.tcgId}
                         </span>
                       </div>
                       <div className="result-card-info">

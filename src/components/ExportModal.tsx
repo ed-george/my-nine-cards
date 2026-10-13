@@ -56,7 +56,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       if (result.shared) {
         setWasShared(true);
       }
-    } catch (err) {
+    } catch {
       setErrorMessage('Failed to generate image download. Please try copying to clipboard or tapping & holding preview.');
     } finally {
       setDownloadingFormat(null);
